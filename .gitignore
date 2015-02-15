@@ -1,0 +1,7 @@
+*.o
+*.lib
+*.a
+*.so
+*.out
+PA2/grading/
+PA2/lexer

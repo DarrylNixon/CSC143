@@ -50,6 +50,30 @@ extern YYSTYPE cool_yylval;
  */
 
 DARROW          =>
+LE              <=
+ASSIGN          <-
+CLASS           [Cc][Ll][Aa][Ss][Ss]
+ELSE            [Ee][Ll][Ss][Ee]
+FALSE           f[Aa][Ll][Ss][Ee]
+FI              [Ff][Ii]
+IF              [Ii][Ff]
+IN              [Ii][Nn]
+INHERITS        [Ii][Nn][Hh][Ee][Rr][Ii][Tt][Ss]
+ISVOID          [Ii][Ss][Vv][Oo][Ii][Dd]
+LET             [Ll][Ee][Tt]
+LOOP            [Ll][Oo][Oo][Pp]
+POOL            [Pp][Oo][Oo][Ll]
+THEN            [Tt][Hh][Ee][Nn]
+WHILE           [Ww][Hh][Ii][Ll][Ee]
+CASE            [Cc][Aa][Ss][Ee]
+ESAC            [Ee][Ss][Aa][Cc]
+NEW             [Nn][Ee][Ww]
+OF              [Oo][Ff]
+NOT             [Nn][Oo][Tt]
+TRUE            t[Rr][Uu][Ee]
+WHITESPACE      [ \n\f\r\t\v]
+OBJECTID        [a-z][a-zA-Z0-9_]*
+TYEPID          [A-Z][a-zA-Z0-9_]*
 
 %%
 
@@ -62,12 +86,34 @@ DARROW          =>
   *  The multiple-character operators.
   */
 {DARROW}		{ return (DARROW); }
+{LE}        { return (LE); }
+{ASSIGN}    { return (ASSIGN); }
 
  /*
   * Keywords are case-insensitive except for the values true and false,
   * which must begin with a lower-case letter.
   */
-
+{CLASS}     { return (CLASS); }
+{ELSE}      { return (CLASS); }
+{FALSE}     { yylval.boolean = 0; return (BOOL_CONST); }
+{FI}        { return (CLASS); }
+{IF}        { return (CLASS); }
+{IN}        { return (CLASS); }
+{INHERITS}  { return (CLASS); }
+{ISVOID}    { return (CLASS); }
+{LET}       { return (CLASS); }
+{LOOP}      { return (CLASS); }
+{POOL}      { return (CLASS); }
+{THEN}      { return (CLASS); }
+{WHILE}     { return (CLASS); }
+{CASE}      { return (CLASS); }
+{ESAC}      { return (CLASS); }
+{NEW}       { return (CLASS); }
+{OF}        { return (CLASS); }
+{NOT}       { return (CLASS); }
+{TRUE}      { yylval.boolean = 1; return (BOOL_CONST); }
+{OBJECTID}  { yylval.symbol = idtable.add_string(yytext,yyleng); return (OBJECTID); }
+{TYPEID}  { yylval.symbol = idtable.add_string(yytext,yyleng); return (TYPEID); }
 
  /*
   *  String constants (C syntax)
