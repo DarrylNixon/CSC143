@@ -42,7 +42,9 @@ extern YYSTYPE cool_yylval;
 /*
  *  Add Your own definitions here
  */
- 
+void resetString();
+bool invalidSize();
+
 int comment_nest_level = 0;
 
 %}
@@ -178,14 +180,13 @@ OPERATOR       	[\+\/\-\*\=\<\.\~\,\;\:\(\)\@\{\}]
   string_buf_ptr = string_buf;
   BEGIN(STRING);
 }
-<BADSTRING>.*[\""\n] {
+<BADSTRING>.*[\"\n] {
   BEGIN(INITIAL);
 }
 <STRING>{
   "\"" {
-    *string_buf_ptr = '\0';
+    *string_buf_ptr++ = '\0';
     cool_yylval.symbol = stringtable.add_string(string_buf);
-    string_buf[0] = '\0';
     BEGIN(INITIAL);
     return (STR_CONST);
   }
@@ -194,79 +195,76 @@ OPERATOR       	[\+\/\-\*\=\<\.\~\,\;\:\(\)\@\{\}]
     BEGIN(BADSTRING);
     return (ERROR);
   }
-  \\\n {
+  \n {
+    resetString();
     curr_lineno++;
-    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
-      BEGIN(INITIAL);
-      string_buf[0] = '\0';
-      cool_yylval.error_msg = "String constant too long";
+    BEGIN(INITIAL);
+    cool_yylval.error_msg = "unterminated string constant NL";
+    return (ERROR);
+  }
+  \\n {
+    if (invalidSize()) {
+      BEGIN(BADSTRING);
+      resetString();
+      cool_yylval.error_msg = "String constant too long ESCAPED NL";
       return (ERROR);
     }
     *string_buf_ptr++ = ('\n');
   }
-  \n {
+  \\\n {
     curr_lineno++;
-    BEGIN(INITIAL);
-    string_buf[0] = '\0';
-    cool_yylval.error_msg = "unterminated string constant";
-    return (ERROR);
+    if (invalidSize()) {
+      BEGIN(BADSTRING);
+      resetString();
+      cool_yylval.error_msg = "String constant too long DOUBLE ESCAPED NL";
+      return (ERROR);
+    }
+    *string_buf_ptr++ = ('\n');
   }
   <<EOF>> {
     BEGIN(INITIAL);
     cool_yylval.error_msg = "EOF in string constant";
     return (ERROR);
   }
-  \\n {
-    curr_lineno++;
-    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
-      BEGIN(INITIAL);
-      string_buf[0] = '\0';
-      cool_yylval.error_msg = "String constant too long";
-      return (ERROR);
-    }
-    *string_buf_ptr++ = ('\n');
-  }
   \\t {
-    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
-      BEGIN(INITIAL);
-      string_buf[0] = '\0';
+    if (invalidSize()) {
+      BEGIN(BADSTRING);
+      resetString();
       cool_yylval.error_msg = "String constant too long";
       return (ERROR);
     }
     *string_buf_ptr++ = ('\t');
   }
   \\b {
-    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
-      BEGIN(INITIAL);
-      string_buf[0] = '\0';
+    if (invalidSize()) {
+      BEGIN(BADSTRING);
+      resetString();
       cool_yylval.error_msg = "String constant too long";
       return (ERROR);
     }
     *string_buf_ptr++ = ('\b');
   }
   \\f {
-    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
-      BEGIN(INITIAL);
-      string_buf[0] = '\0';
+    if (invalidSize()) {
+      BEGIN(BADSTRING);
+      resetString();
       cool_yylval.error_msg = "String constant too long";
       return (ERROR);
     }
     *string_buf_ptr++ = ('\f');
   }
   \\. {
-    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
-      BEGIN(INITIAL);
-      string_buf[0] = '\0';
-      cool_yylval.error_msg = "String constant too long";
+    if (invalidSize()) {
+      BEGIN(BADSTRING);
+      cool_yylval.error_msg = "String constant too long ESCAPED PERIOD";
       return (ERROR);
     }
     *string_buf_ptr++ = (strdup(yytext)[1]);
   }
   . {
-    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
-      BEGIN(INITIAL);
-      string_buf[0] = '\0';
-      cool_yylval.error_msg = "String constant too long";
+    if (invalidSize()) {
+      BEGIN(BADSTRING);
+      cool_yylval.error_msg = "String constant too long PERIOD CATCHER";
       return (ERROR);
     }
     *string_buf_ptr++ = (strdup(yytext)[0]);
@@ -279,3 +277,17 @@ OPERATOR       	[\+\/\-\*\=\<\.\~\,\;\:\(\)\@\{\}]
 .             { cool_yylval.error_msg = yytext; return (ERROR); }
 
 %%
+
+void resetString() {
+  *string_buf_ptr = '\0';
+  string_buf[0] = '\0';
+  string_buf_ptr = string_buf;
+}
+
+bool invalidSize() {
+  if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
+    BEGIN(BADSTRING);
+    return true;
+  }
+  return false;
+}
