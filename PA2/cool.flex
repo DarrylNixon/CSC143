@@ -183,8 +183,8 @@ OPERATOR       	[\+\/\-\*\=\<\.\~\,\;\:\(\)\@\{\}]
 }
 <STRING>{
   "\"" {
+    *string_buf_ptr = '\0';
     cool_yylval.symbol = stringtable.add_string(string_buf);
-    *string_buf_ptr = 0;
     string_buf[0] = '\0';
     BEGIN(INITIAL);
     return (STR_CONST);
@@ -195,17 +195,18 @@ OPERATOR       	[\+\/\-\*\=\<\.\~\,\;\:\(\)\@\{\}]
     return (ERROR);
   }
   \\\n {
-    if (string_buf_ptr - string_buf >= MAX_STR_CONST) {
-      cool_yylval.error_msg = "bad string length";
+    curr_lineno++;
+    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
+      BEGIN(INITIAL);
+      string_buf[0] = '\0';
+      cool_yylval.error_msg = "String constant too long";
       return (ERROR);
     }
-    curr_lineno++;
     *string_buf_ptr++ = ('\n');
   }
   \n {
     curr_lineno++;
     BEGIN(INITIAL);
-    *string_buf_ptr = 0;
     string_buf[0] = '\0';
     cool_yylval.error_msg = "unterminated string constant";
     return (ERROR);
@@ -216,51 +217,58 @@ OPERATOR       	[\+\/\-\*\=\<\.\~\,\;\:\(\)\@\{\}]
     return (ERROR);
   }
   \\n {
-    if (string_buf_ptr - string_buf >= MAX_STR_CONST) {
-      cool_yylval.error_msg = "bad string length";
+    curr_lineno++;
+    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
+      BEGIN(INITIAL);
+      string_buf[0] = '\0';
+      cool_yylval.error_msg = "String constant too long";
       return (ERROR);
     }
-    curr_lineno++;
     *string_buf_ptr++ = ('\n');
   }
   \\t {
-    if (string_buf_ptr - string_buf >= MAX_STR_CONST) {
-      cool_yylval.error_msg = "bad string length";
+    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
+      BEGIN(INITIAL);
+      string_buf[0] = '\0';
+      cool_yylval.error_msg = "String constant too long";
       return (ERROR);
     }
-    curr_lineno++;
     *string_buf_ptr++ = ('\t');
   }
   \\b {
-    if (string_buf_ptr - string_buf >= MAX_STR_CONST) {
-      cool_yylval.error_msg = "bad string length";
+    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
+      BEGIN(INITIAL);
+      string_buf[0] = '\0';
+      cool_yylval.error_msg = "String constant too long";
       return (ERROR);
     }
-    curr_lineno++;
     *string_buf_ptr++ = ('\b');
   }
   \\f {
-    if (string_buf_ptr - string_buf >= MAX_STR_CONST) {
-      cool_yylval.error_msg = "bad string length";
+    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
+      BEGIN(INITIAL);
+      string_buf[0] = '\0';
+      cool_yylval.error_msg = "String constant too long";
       return (ERROR);
     }
-    curr_lineno++;
     *string_buf_ptr++ = ('\f');
   }
   \\. {
-    if (string_buf_ptr - string_buf >= MAX_STR_CONST) {
-      cool_yylval.error_msg = "bad string length";
+    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
+      BEGIN(INITIAL);
+      string_buf[0] = '\0';
+      cool_yylval.error_msg = "String constant too long";
       return (ERROR);
     }
-    curr_lineno++;
     *string_buf_ptr++ = (strdup(yytext)[1]);
   }
   . {
-    if (string_buf_ptr - string_buf >= MAX_STR_CONST) {
-      cool_yylval.error_msg = "bad string length";
+    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
+      BEGIN(INITIAL);
+      string_buf[0] = '\0';
+      cool_yylval.error_msg = "String constant too long";
       return (ERROR);
     }
-    curr_lineno++;
     *string_buf_ptr++ = (strdup(yytext)[0]);
   }
 }
