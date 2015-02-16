@@ -125,22 +125,7 @@ OPERATOR       	[\+\/\-\*\=\<\.\~\,\;\:\(\)\@\{\}]
 {DARROW}		{ return (DARROW); }
 {LE}        { return (LE); }
 {ASSIGN}    { return (ASSIGN); }
-"/"         { return '/'; }
-"+"         { return '+'; }
-"-"         { return '-'; }
-"*"         { return '*'; }
-"("         { return '('; }
-")"         { return ')'; }
-"="         { return '='; }
-"<"         { return '<'; }
-"."         { return '.'; }
-"~"         { return '~'; }
-","         { return ','; }
-";"         { return ';'; }
-":"         { return ':'; }
-"@"         { return '@'; }
-"{"         { return '{'; }
-"}"         { return '}'; }
+{OPERATOR}  { return (yytext[0]); }
 {DIGIT}     { yylval.symbol = inttable.add_string(yytext,yyleng); return (INT_CONST); }
 {OPERATOR}	{ return (yytext[0]); }
 
@@ -191,7 +176,7 @@ OPERATOR       	[\+\/\-\*\=\<\.\~\,\;\:\(\)\@\{\}]
     return (STR_CONST);
   }
   (\0|\\\0) {
-    cool_yylval.error_msg = "null char in string";
+    cool_yylval.error_msg = "Null character in string.";
     BEGIN(BADSTRING);
     return (ERROR);
   }
@@ -199,14 +184,12 @@ OPERATOR       	[\+\/\-\*\=\<\.\~\,\;\:\(\)\@\{\}]
     resetString();
     curr_lineno++;
     BEGIN(INITIAL);
-    cool_yylval.error_msg = "unterminated string constant NL";
+    cool_yylval.error_msg = "Unterminated string constant (newline).";
     return (ERROR);
   }
   \\n {
     if (invalidSize()) {
-      BEGIN(BADSTRING);
       resetString();
-      cool_yylval.error_msg = "String constant too long ESCAPED NL";
       return (ERROR);
     }
     *string_buf_ptr++ = ('\n');
@@ -214,9 +197,7 @@ OPERATOR       	[\+\/\-\*\=\<\.\~\,\;\:\(\)\@\{\}]
   \\\n {
     curr_lineno++;
     if (invalidSize()) {
-      BEGIN(BADSTRING);
       resetString();
-      cool_yylval.error_msg = "String constant too long DOUBLE ESCAPED NL";
       return (ERROR);
     }
     *string_buf_ptr++ = ('\n');
@@ -228,49 +209,38 @@ OPERATOR       	[\+\/\-\*\=\<\.\~\,\;\:\(\)\@\{\}]
   }
   \\t {
     if (invalidSize()) {
-      BEGIN(BADSTRING);
       resetString();
-      cool_yylval.error_msg = "String constant too long";
       return (ERROR);
     }
     *string_buf_ptr++ = ('\t');
   }
   \\b {
     if (invalidSize()) {
-      BEGIN(BADSTRING);
       resetString();
-      cool_yylval.error_msg = "String constant too long";
       return (ERROR);
     }
     *string_buf_ptr++ = ('\b');
   }
   \\f {
     if (invalidSize()) {
-      BEGIN(BADSTRING);
       resetString();
-      cool_yylval.error_msg = "String constant too long";
       return (ERROR);
     }
     *string_buf_ptr++ = ('\f');
   }
   \\. {
     if (invalidSize()) {
-      BEGIN(BADSTRING);
-      cool_yylval.error_msg = "String constant too long ESCAPED PERIOD";
       return (ERROR);
     }
     *string_buf_ptr++ = (strdup(yytext)[1]);
   }
   . {
     if (invalidSize()) {
-      BEGIN(BADSTRING);
-      cool_yylval.error_msg = "String constant too long PERIOD CATCHER";
       return (ERROR);
     }
     *string_buf_ptr++ = (strdup(yytext)[0]);
   }
 }
-
 
 \n+            { curr_lineno += yyleng; }
 [ \t\r\f\v]   ;
@@ -287,6 +257,7 @@ void resetString() {
 bool invalidSize() {
   if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
     BEGIN(BADSTRING);
+    cool_yylval.error_msg = "String constant too long.";
     return true;
   }
   return false;
