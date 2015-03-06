@@ -5,3 +5,5 @@
 *.out
 PA2/grading/
 PA2/lexer
+PA3/grading/
+PA3/myparser
