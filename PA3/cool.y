@@ -164,15 +164,12 @@
     program     : class_list { @$ = @1; ast_root = program($1); } ;
     class_list  : class { $$ = single_Classes($1); parse_results = $$; }
                 | class_list class { $$ = append_Classes($1,single_Classes($2)); parse_results = $$; }
-                | error '}' ';' { yyclearin; $$ = NULL; }
                 ;
     class       : CLASS TYPEID '{' feature_list '}' ';' { $$ = class_($2, idtable.add_string("Object"),
                   $4, stringtable.add_string(curr_filename)); }
                 | CLASS TYPEID INHERITS TYPEID '{' feature_list '}' ';' { $$ = class_($2, $4, $6,
                   stringtable.add_string(curr_filename)); }
-                | CLASS TYPEID '{' error '}' ';' { yyclearin; $$ = NULL; }
-                | CLASS error '{' feature_list '}' ';' { yyclearin; $$ = NULL; }
-                | CLASS error '{' error '}' ';' { yyerrok; }
+                | CLASS error '}' ';' { yyclearin; $$ = NULL; }
                 ;
     feature_list: features { $$ = $1; }
                 | {  $$ = nil_Features(); }
