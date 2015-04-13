@@ -1,0 +1,3 @@
+./methodnameclash.test:1: Attribute already defined.
+./methodnameclash.test:1: Attribute already defined.
+Compilation halted due to static semantic errors.

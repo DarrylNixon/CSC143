@@ -1,0 +1,7 @@
+	-1 (assignment)	 Valid assignments
+	-1 (classes)	 Various classes with inheritance and overriding (legal)
+	-1 (hairyscary)	 Messy legal Cool program
+	-1 (inheritsbool)	 Class inherits Bool (illegal)
+	-1 (inheritsselftype)	 Class inherits SELF_TYPE (illegal)
+	-1 (inheritsstring)	 Class inherits String (illegal)
+	-1 (methodnameclash)	 Two children define a function differently (allowed)
