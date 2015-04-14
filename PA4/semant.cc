@@ -100,6 +100,10 @@ ClassTable::ClassTable(Classes classesIn) : semant_errors(0) , error_stream(cerr
 
     for (int i = classesIn->first(); classesIn->more(i); i = classesIn->next(i)) {
         Class_ c = classesIn->nth(i);
+        
+        if (c->getParentName() == Bool || c->getParentName() == Str || c->getParentName() == SELF_TYPE) {
+            errorOut(this, c, "Can't inherit Bool || SELF_TYPE || Str.");
+        }
 
         if (symTab.lookup(c->getName()) != NULL) {
             errorOut(this, c, "Duplicate name.");
@@ -561,10 +565,8 @@ Symbol static_dispatch_class::typeCheck(ClassTable *classtable) {
 }
 
 Symbol dispatch_class::typeCheck(ClassTable *classtable) {
-    Symbol c_type = expr->typeCheck(classtable);
-
     Class_ c;
-
+    Symbol c_type = expr->typeCheck(classtable);
     if (c_type == No_type || c_type == SELF_TYPE) 
         c = classtable->getCurrentClass();
     else
@@ -575,7 +577,6 @@ Symbol dispatch_class::typeCheck(ClassTable *classtable) {
         set_type(Object);
         return Object;
     }
-    
     method_class *m = classtable->getMethod(c, name);
     
     if (m == NULL) { 
